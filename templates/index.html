@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Paróquia</title>
+    <title>Sistema Paróquia - Santuário São José</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
         <div class="container">
-            <a class="navbar-brand" href="/">Santuário Sâo José</a>
+            <a class="navbar-brand" href="/">Santuário São José</a>
             <div class="navbar-nav">
                 <a class="nav-link active" href="/">Estoque</a>
                 <a class="nav-link" href="/beneficiarios">Beneficiários</a>
@@ -20,16 +21,17 @@
     <div class="container">
         <div class="row">
             <div class="col-md-4">
-                <div class="card p-3 shadow-sm">
-                    <h4>Movimentação de Estoque</h4>
+                <div class="card p-3 shadow-sm border-0">
+                    <h4 class="text-primary"><i class="bi bi-plus-circle"></i> Nova Movimentação</h4>
+                    <hr>
                     <form action="/registrar" method="POST">
-                        <label class="form-label">Item</label>
-                        <input type="text" name="item" class="form-control mb-2" placeholder="Ex: Arroz" required>
+                        <label class="form-label font-weight-bold">Item</label>
+                        <input type="text" name="item" class="form-control mb-2" placeholder="Ex: Feijão" required>
                         
                         <label class="form-label">Quantidade</label>
-                        <input type="number" name="quantidade" class="form-control mb-2" placeholder="Ex: 10" required>
+                        <input type="number" name="quantidade" class="form-control mb-2" placeholder="Ex: 5" required>
                         
-                        <label class="form-label">Tipo de Movimentação</label>
+                        <label class="form-label">Tipo</label>
                         <select name="tipo" class="form-select mb-2" required>
                             <option value="ENTRADA">Entrada (Doação)</option>
                             <option value="SAIDA">Saída (Entrega)</option>
@@ -44,10 +46,10 @@
             </div>
             
             <div class="col-md-8">
-                <div class="card p-3 shadow-sm">
-                    <h4>Estoque Atual (Saldo)</h4>
-                    <table class="table table-striped">
-                        <thead>
+                <div class="card p-3 shadow-sm border-0">
+                    <h4 class="text-secondary"><i class="bi bi-box-seam"></i> Saldo Atual</h4>
+                    <table class="table table-hover mt-3">
+                        <thead class="table-dark">
                             <tr>
                                 <th>Item</th>
                                 <th>Saldo Total</th>
@@ -56,20 +58,20 @@
                         </thead>
                         <tbody>
                             {% for item, quantidade in estoque.items() %}
-                            <tr>
+                            <tr class="{{ 'table-danger' if quantidade <= 5 else '' }}">
                                 <td>**{{ item }}**</td>
                                 <td>{{ quantidade }} unidades</td>
                                 <td>
                                     {% if quantidade > 5 %}
                                         <span class="badge bg-success">Estoque OK</span>
                                     {% else %}
-                                        <span class="badge bg-danger">Baixo Estoque</span>
+                                        <span class="badge bg-danger pulse">Estoque Crítico</span>
                                     {% endif %}
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="3" class="text-center text-muted">Nenhum item no estoque.</td>
+                                <td colspan="3" class="text-center text-muted">Nenhum item em estoque.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -77,6 +79,59 @@
                 </div>
             </div>
         </div>
+
+        <div class="row mt-4 mb-5">
+            <div class="col-12">
+                <div class="card p-3 shadow-sm border-0">
+                    <h4 class="text-secondary"><i class="bi bi-clock-history"></i> Histórico de Movimentações</h4>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Item</th>
+                                    <th>Qtd</th>
+                                    <th>Tipo</th>
+                                    <th>Responsável</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in movimentacoes %}
+                                <tr>
+                                    <td>{{ m.data.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>{{ m.item }}</td>
+                                    <td>{{ m.quantidade }}</td>
+                                    <td>
+                                        <span class="badge {{ 'bg-info' if m.tipo == 'ENTRADA' else 'bg-secondary' }}">
+                                            {{ m.tipo }}
+                                        </span>
+                                    </td>
+                                    <td>{{ m.responsavel }}</td>
+                                    <td>
+                                        <a href="{{ url_for('excluir_movimentacao', id=m.id) }}" 
+                                           class="text-danger" 
+                                           onclick="return confirm('Excluir este registro de movimentação?')">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <style>
+        .pulse { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
 </body>
 </html>
