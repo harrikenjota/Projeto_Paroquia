@@ -27,8 +27,16 @@
         .navbar-paroquia {
             background-color: var(--cor-santuario);
             border-bottom: 4px solid var(--cor-saojose);
-            padding: 0.8rem 0;
+            padding: 0.6rem 0;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Estilo da Logo Imagem */
+        .logo-img {
+            height: 50px; /* Altura ideal para a barra */
+            width: auto;  /* Ajusta a largura proporcionalmente */
+            margin-right: 12px;
+            object-fit: contain;
         }
 
         /* Estilo do Logo Texto */
@@ -37,12 +45,14 @@
             font-weight: 300; 
             letter-spacing: 1px;
             text-transform: uppercase;
-            font-size: 1.1rem;
+            font-size: 1rem;
+            line-height: 1;
         }
         .brand-saojose { 
             color: var(--cor-saojose) !important; 
             font-weight: 800;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
+            line-height: 1;
         }
 
         /* Links de Navegação */
@@ -57,15 +67,10 @@
             transform: translateY(-2px);
         }
 
-        /* Botão Hamburguer Customizado */
         .navbar-toggler {
             border-color: rgba(240, 182, 36, 0.5);
         }
-        .navbar-toggler:focus {
-            box-shadow: 0 0 0 0.25 milrem rgba(240, 182, 36, 0.25);
-        }
-
-        /* Estilização Geral de Cards e Botões para combinar */
+        
         .card-header {
             background-color: var(--cor-santuario) !important;
             color: white !important;
@@ -74,24 +79,21 @@
             background-color: var(--cor-santuario) !important;
             border-color: var(--cor-santuario) !important;
         }
-        .btn-success:hover {
-            background-color: #3a1612 !important;
-            border-color: var(--cor-saojose) !important;
-        }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-paroquia mb-4">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="/">
-                <i class="bi bi-church text-white me-2 fs-3"></i>
+                <img src="{{ url_for('static', filename='logo_igreja.png') }}" alt="Logo" class="logo-img">
+                
                 <div>
-                    <span class="brand-santuario d-block line-height-1">Santuário</span>
-                    <span class="brand-saojose d-block mt-n1">São José</span>
+                    <span class="brand-santuario d-block">Santuário</span>
+                    <span class="brand-saojose d-block">São José</span>
                 </div>
             </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
