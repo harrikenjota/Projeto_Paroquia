@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from models import db, Beneficiario, Doacao
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 
@@ -14,10 +15,10 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-# --- ROTA 1: PÁGINA INICIAL (ESTOQUE) ---
+# --- ROTA 1: PÁGINA INICIAL (ESTOQUE + DASHBOARD) ---
 @app.route('/')
 def index():
-    # Buscamos todas as movimentações ordenadas pela data mais recente
+    # Busca todas as movimentações
     todas_movimentacoes = Doacao.query.order_by(Doacao.data.desc()).all()
     
     # Lógica para calcular o saldo atual por item
@@ -32,8 +33,19 @@ def index():
         else:
             estoque[item_nome] -= d.quantidade
             
-    # Enviamos o saldo (estoque) e o histórico (movimentacoes) para o HTML
-    return render_template('index.html', estoque=estoque, movimentacoes=todas_movimentacoes)
+    # --- DADOS PARA O DASHBOARD (CONTROLE) ---
+    total_familias = Beneficiario.query.count()
+    total_itens_estoque = len(estoque) # Tipos de produtos diferentes
+    
+    # Conta movimentações feitas hoje (comparando apenas a data, sem a hora)
+    hoje = Doacao.query.filter(db.func.date(Doacao.data) == datetime.now().date()).count()
+
+    return render_template('index.html', 
+                           estoque=estoque, 
+                           movimentacoes=todas_movimentacoes,
+                           total_familias=total_familias,
+                           total_itens=total_itens_estoque,
+                           hoje=hoje)
 
 # --- ROTA 2: REGISTRAR ENTRADA/SAÍDA ---
 @app.route('/registrar', methods=['POST'])
@@ -49,7 +61,7 @@ def registrar():
     db.session.commit()
     return redirect(url_for('index'))
 
-# --- NOVA ROTA: EXCLUIR MOVIMENTAÇÃO DE ESTOQUE ---
+# --- ROTA: EXCLUIR MOVIMENTAÇÃO ---
 @app.route('/excluir_movimentacao/<int:id>')
 def excluir_movimentacao(id):
     mov = Doacao.query.get(id)
@@ -84,9 +96,7 @@ def excluir_beneficiario(id):
         db.session.commit()
     return redirect(url_for('beneficiarios'))
 
+# --- CONFIGURAÇÃO PARA O DEPLOY (RENDER) ---
 if __name__ == '__main__':
-    import os
-    # O servidor vai nos dar uma porta, se não der, usamos a 5000
     port = int(os.environ.get("PORT", 5000))
-    # O host '0.0.0.0' permite que o site seja acessado externamente
     app.run(host='0.0.0.0', port=port)
