@@ -1,34 +1,109 @@
+Aqui está o seu base.html atualizado com as cores exatas que você passou (Bordeaux #4f1f19 e Dourado #f0b624) e o fundo Branco #fefefe.
+
+Eu aproveitei para dar um toque mais sofisticado no CSS, garantindo que o menu hambúrguer funcione em todas as páginas e que a identidade visual seja aplicada até nos botões e links.
+
+HTML
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title>Santuário São José</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
     <style>
-        body { background-color: #f8f9fa; }
-        .navbar { shadow: 0 2px 4px rgba(0,0,0,.1); }
+        /* DEFINIÇÃO DA IDENTIDADE VISUAL */
+        :root {
+            --cor-santuario: #4f1f19; /* Bordeaux */
+            --cor-saojose: #f0b624;   /* Dourado */
+            --cor-fundo: #fefefe;     /* Branco */
+            --cor-texto: #2d2d2d;
+        }
+
+        body { 
+            background-color: var(--cor-fundo); 
+            color: var(--cor-texto);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Navbar Customizada */
+        .navbar-paroquia {
+            background-color: var(--cor-santuario);
+            border-bottom: 4px solid var(--cor-saojose);
+            padding: 0.8rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Estilo do Logo Texto */
+        .brand-santuario { 
+            color: #ffffff !important; 
+            font-weight: 300; 
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 1.1rem;
+        }
+        .brand-saojose { 
+            color: var(--cor-saojose) !important; 
+            font-weight: 800;
+            font-size: 1.4rem;
+        }
+
+        /* Links de Navegação */
+        .nav-link {
+            color: rgba(255,255,255,0.85) !important;
+            font-weight: 500;
+            margin-left: 15px;
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover {
+            color: var(--cor-saojose) !important;
+            transform: translateY(-2px);
+        }
+
+        /* Botão Hamburguer Customizado */
+        .navbar-toggler {
+            border-color: rgba(240, 182, 36, 0.5);
+        }
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.25 milrem rgba(240, 182, 36, 0.25);
+        }
+
+        /* Estilização Geral de Cards e Botões para combinar */
+        .card-header {
+            background-color: var(--cor-santuario) !important;
+            color: white !important;
+        }
+        .btn-success, .btn-primary {
+            background-color: var(--cor-santuario) !important;
+            border-color: var(--cor-santuario) !important;
+        }
+        .btn-success:hover {
+            background-color: #3a1612 !important;
+            border-color: var(--cor-saojose) !important;
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-paroquia mb-4">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/">
-                <i class="bi bi-church"></i> Santuário São José
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="bi bi-church text-white me-2 fs-3"></i>
+                <div>
+                    <span class="brand-santuario d-block line-height-1">Santuário</span>
+                    <span class="brand-saojose d-block mt-n1">São José</span>
+                </div>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
-            <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="collapse navbar-collapse" id="menuPrincipal">
                 <div class="navbar-nav ms-auto">
-                    <a class="nav-link" href="/"><i class="bi bi-box-seam"></i> Estoque</a>
-                    <a class="nav-link" href="{{ url_for('beneficiarios') }}"><i class="bi bi-people"></i> Beneficiários</a>
+                    <a class="nav-link" href="/"><i class="bi bi-archive-fill me-1"></i> Estoque</a>
+                    <a class="nav-link" href="{{ url_for('beneficiarios') }}"><i class="bi bi-people-fill me-1"></i> Beneficiários</a>
                 </div>
             </div>
         </div>
