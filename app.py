@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, Response
 from models import db, Beneficiario, Doacao
 from datetime import datetime
 import os
+import csv
+import io
 
 app = Flask(__name__)
 
@@ -18,10 +20,8 @@ with app.app_context():
 # --- ROTA 1: PÁGINA INICIAL (ESTOQUE + DASHBOARD) ---
 @app.route('/')
 def index():
-    # Busca todas as movimentações
     todas_movimentacoes = Doacao.query.order_by(Doacao.data.desc()).all()
     
-    # Lógica para calcular o saldo atual por item
     estoque = {}
     for d in todas_movimentacoes:
         item_nome = d.item.upper()
@@ -33,11 +33,8 @@ def index():
         else:
             estoque[item_nome] -= d.quantidade
             
-    # --- DADOS PARA O DASHBOARD (CONTROLE) ---
     total_familias = Beneficiario.query.count()
-    total_itens_estoque = len(estoque) # Tipos de produtos diferentes
-    
-    # Conta movimentações feitas hoje (comparando apenas a data, sem a hora)
+    total_itens_estoque = len(estoque) 
     hoje = Doacao.query.filter(db.func.date(Doacao.data) == datetime.now().date()).count()
 
     return render_template('index.html', 
@@ -46,6 +43,30 @@ def index():
                            total_familias=total_familias,
                            total_itens=total_itens_estoque,
                            hoje=hoje)
+
+# --- ROTA: EXPORTAR ESTOQUE (CSV) ---
+@app.route('/exportar_csv')
+def exportar_csv():
+    movimentacoes = Doacao.query.order_by(Doacao.data.desc()).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Data', 'Item', 'Quantidade', 'Tipo', 'Responsavel'])
+    for m in movimentacoes:
+        writer.writerow([m.data.strftime('%d/%m/%Y %H:%M'), m.item, m.quantidade, m.tipo, m.responsavel])
+    output.seek(0)
+    return Response(output.getvalue(), mimetype="text/csv", headers={"Content-disposition": "attachment; filename=relatorio_santuario.csv"})
+
+# --- NOVA ROTA: EXPORTAR BENEFICIÁRIOS (CSV) ---
+@app.route('/exportar_beneficiarios_csv')
+def exportar_beneficiarios_csv():
+    pessoas = Beneficiario.query.all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Nome', 'Categoria', 'Telefone', 'Endereco'])
+    for p in pessoas:
+        writer.writerow([p.nome, p.categoria, p.telefone, p.endereco])
+    output.seek(0)
+    return Response(output.getvalue(), mimetype="text/csv", headers={"Content-disposition": "attachment; filename=contatos_santuario.csv"})
 
 # --- ROTA 2: REGISTRAR ENTRADA/SAÍDA ---
 @app.route('/registrar', methods=['POST'])
@@ -83,7 +104,6 @@ def beneficiarios():
         db.session.add(novo_b)
         db.session.commit()
         return redirect(url_for('beneficiarios'))
-
     lista_familias = Beneficiario.query.all()
     return render_template('beneficiarios.html', beneficiarios=lista_familias)
 
@@ -96,7 +116,6 @@ def excluir_beneficiario(id):
         db.session.commit()
     return redirect(url_for('beneficiarios'))
 
-# --- CONFIGURAÇÃO PARA O DEPLOY (RENDER) ---
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
