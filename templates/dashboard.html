@@ -2,28 +2,46 @@
 
 {% block content %}
 <div class="container">
+
     <h2 class="fw-bold mb-4" style="color: var(--cor-santuario)">Painel de Estatísticas</h2>
+    <br>
+
 
     <div class="row mb-4">
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="card bg-light border-0 shadow-sm text-center p-3">
-                <h6 class="text-muted text-uppercase small fw-bold">Famílias Atendidas</h6>
-                <h2 class="fw-bold">{{ total_familias }}</h2>
+                <h6 class="text-muted text-uppercase small fw-bold">Famílias Assistidas</h6>
+                <h2 class="fw-bold text-dark">{{ total_assistidos }}</h2>
+                <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">BENEFICIÁRIOS</span>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
+
+        <div class="col-md-3 mb-3">
+            <div class="card bg-light border-0 shadow-sm text-center p-3">
+                <h6 class="text-muted text-uppercase small fw-bold">Doadores Ativos</h6>
+                <h2 class="fw-bold text-primary">{{ total_doadores }}</h2>
+                <span class="badge bg-info text-white" style="font-size: 0.6rem;">PARCEIROS</span>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
             <div class="card border-0 shadow-sm text-center p-3 text-white" style="background-color: var(--cor-santuario)">
-                <h6 class="text-uppercase small fw-bold">Itens em Alerta (<=5)</h6>
+                <h6 class="text-uppercase small fw-bold">Itens em Alerta</h6>
                 <h2 class="fw-bold">{{ itens_criticos }}</h2>
+                <span class="badge bg-white text-danger" style="font-size: 0.6rem;">ESTOQUE BAIXO</span>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
+
+        <div class="col-md-3 mb-3">
             <div class="card bg-success border-0 shadow-sm text-center p-3 text-white">
                 <h6 class="text-uppercase small fw-bold">Total Entradas</h6>
                 <h2 class="fw-bold">{{ entradas }}</h2>
+                <span class="badge bg-white text-success" style="font-size: 0.6rem;">HISTÓRICO</span>
             </div>
         </div>
     </div>
+    <br>
+
 
     <div class="row">
         <div class="col-md-6 mb-4">
@@ -35,20 +53,16 @@
 
         <div class="col-md-6 mb-4">
             <div class="card border-0 shadow-sm p-3">
-                <h5 class="fw-bold mb-3 small text-muted text-uppercase">Volume de Operações (Total Histórico)</h5>
+                <h5 class="fw-bold mb-3 small text-muted text-uppercase">Volume de Operações (Histórico)</h5>
                 <canvas id="graficoBarras"></canvas>
             </div>
         </div>
     </div>
-</div>
+    </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    /* Recebe as variáveis do Flask (Jinja2) e as transformam
-       em constantes JavaScript para o Chart.js renderizar na tela.
-    */
-
     // --- GRÁFICO DE ROSCA (ITENS EM ESTOQUE) ---
     const ctxPizza = document.getElementById('graficoEstoque');
     const labelsEstoque = JSON.parse('{{ labels|tojson|safe }}');
@@ -74,8 +88,6 @@
 
     // --- GRÁFICO DE BARRAS (ENTRADAS VS SAÍDAS) ---
     const ctxBarras = document.getElementById('graficoBarras');
-    
-    // Converte valores do servidor para Números no JavaScript
     const numEntradas = Number('{{ entradas }}');
     const numSaidas = Number('{{ saidas }}');
 

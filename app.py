@@ -7,27 +7,33 @@ import io
 
 app = Flask(__name__)
 
-# --- 1. CONFIGURAÇÕES DO SISTEMA ---
-# Define o banco de dados e a chave de segurança para mensagens de alerta
+# ==========================================
+# SEÇÃO 1: CONFIGURAÇÕES DO SISTEMA
+# ==========================================
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///paroquia.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'santuario_sao_jose_secret'
 
 db.init_app(app)
+# FIM DA SEÇÃO 1
 
-# --- 2. INICIALIZAÇÃO DO BANCO ---
-# Cria as tabelas automaticamente se elas ainda não existirem
+
+# ==========================================
+# SEÇÃO 2: INICIALIZAÇÃO DO BANCO
+# ==========================================
 with app.app_context():
     db.create_all()
+# FIM DA SEÇÃO 2
 
-# --- 3. ROTA: PAINEL PRINCIPAL (ESTOQUE) ---
+
+# ==========================================
+# SEÇÃO 3: ROTA - PAINEL PRINCIPAL (ESTOQUE)
+# ==========================================
 @app.route('/')
 def index():
-    # Busca todas as movimentações e beneficiários no banco
     todas_movimentacoes = Doacao.query.order_by(Doacao.data.desc()).all()
     lista_beneficiarios = Beneficiario.query.order_by(Beneficiario.nome).all()
     
-    # Cálculo dinâmico do saldo atual de cada item
     estoque = {}
     for d in todas_movimentacoes:
         item_nome = d.item.upper()
@@ -39,11 +45,10 @@ def index():
         else:
             estoque[item_nome] -= d.quantidade
             
-    # Lista de nomes de itens para sugestão no formulário
     lista_itens_existentes = sorted(estoque.keys())
 
-    # KPIs: Indicadores para o topo da página
-    total_familias = len(lista_beneficiarios)
+    # KPIs Rápidos do Index
+    total_familias = Beneficiario.query.filter_by(categoria='Assistido').count()
     total_itens_estoque = len(estoque) 
     hoje = Doacao.query.filter(db.func.date(Doacao.data) == datetime.now().date()).count()
 
@@ -54,9 +59,13 @@ def index():
                            total_itens=total_itens_estoque,
                            hoje=hoje,
                            lista_itens_existentes=lista_itens_existentes,
-                           lista_beneficiarios=lista_beneficiarios) # Enviando a lista para o Select
+                           lista_beneficiarios=lista_beneficiarios)
+# FIM DA SEÇÃO 3
 
-# --- 4. ROTA: DASHBOARD (ESTATÍSTICAS) ---
+
+# ==========================================
+# SEÇÃO 4: ROTA - DASHBOARD (ESTATÍSTICAS)
+# ==========================================
 @app.route('/dashboard')
 def dashboard():
     todas_movimentacoes = Doacao.query.all()
@@ -79,24 +88,31 @@ def dashboard():
     labels = [item for item, qtd in estoque_grafico.items() if qtd > 0]
     valores = [qtd for item, qtd in estoque_grafico.items() if qtd > 0]
     
-    total_familias = Beneficiario.query.count()
+    # --- NOVA LÓGICA DE CONTAGEM SEPARADA ---
+    total_assistidos = Beneficiario.query.filter_by(categoria='Assistido').count()
+    total_doadores = Beneficiario.query.filter_by(categoria='Doador').count()
+    
     itens_criticos = sum(1 for qtd in estoque_grafico.values() if 0 < qtd <= 5)
 
     return render_template('dashboard.html', 
                            labels=labels, valores=valores,
                            entradas=entradas_totais, saidas=saidas_totais,
-                           total_familias=total_familias, itens_criticos=itens_criticos)
+                           total_assistidos=total_assistidos, 
+                           total_doadores=total_doadores,
+                           itens_criticos=itens_criticos)
+# FIM DA SEÇÃO 4
 
-# --- 5. ROTA: PROCESSAR REGISTRO (VINCULANDO BENEFICIÁRIO) ---
+
+# ==========================================
+# SEÇÃO 5: ROTA - PROCESSAR REGISTRO
+# ==========================================
 @app.route('/registrar', methods=['POST'])
 def registrar():
     item_nome = request.form['item'].upper().strip()
     quantidade = int(request.form['quantidade'])
     tipo = request.form['tipo']
-    # Agora o 'responsavel' recebe o nome selecionado no Select do formulário
     responsavel = request.form['responsavel']
 
-    # Validação de estoque para saídas
     if tipo == 'SAIDA':
         movs = Doacao.query.filter_by(item=item_nome).all()
         saldo_atual = sum(m.quantidade if m.tipo == 'ENTRADA' else -m.quantidade for m in movs)
@@ -105,7 +121,6 @@ def registrar():
             flash(f'ERRO: Estoque insuficiente de {item_nome}! Saldo atual: {saldo_atual}.', 'danger')
             return redirect(url_for('index'))
 
-    # Salva a nova doação/movimentação no banco
     nova_movimentacao = Doacao(
         item=item_nome,
         quantidade=quantidade,
@@ -116,8 +131,12 @@ def registrar():
     db.session.add(nova_movimentacao)
     db.session.commit()
     return redirect(url_for('index'))
+# FIM DA SEÇÃO 5
 
-# --- 6. ROTAS DE EXPORTAÇÃO (CSV) ---
+
+# ==========================================
+# SEÇÃO 6: ROTAS DE EXPORTAÇÃO (CSV)
+# ==========================================
 @app.route('/exportar_csv')
 def exportar_csv():
     movimentacoes = Doacao.query.order_by(Doacao.data.desc()).all()
@@ -139,8 +158,12 @@ def exportar_beneficiarios_csv():
         writer.writerow([p.nome, p.categoria, p.telefone, p.endereco])
     output.seek(0)
     return Response(output.getvalue(), mimetype="text/csv", headers={"Content-disposition": "attachment; filename=contatos_santuario.csv"})
+# FIM DA SEÇÃO 6
 
-# --- 7. ROTA: GESTÃO DE BENEFICIÁRIOS (CADASTRO) ---
+
+# ==========================================
+# SEÇÃO 7: GESTÃO DE BENEFICIÁRIOS
+# ==========================================
 @app.route('/beneficiarios/', methods=['GET', 'POST'])
 def beneficiarios():
     if request.method == 'POST':
@@ -156,8 +179,12 @@ def beneficiarios():
     
     lista_familias = Beneficiario.query.all()
     return render_template('beneficiarios.html', beneficiarios=lista_familias)
+# FIM DA SEÇÃO 7
 
-# --- 8. ROTAS DE EXCLUSÃO ---
+
+# ==========================================
+# SEÇÃO 8: ROTAS DE EXCLUSÃO
+# ==========================================
 @app.route('/excluir_movimentacao/<int:id>')
 def excluir_movimentacao(id):
     mov = Doacao.query.get(id)
@@ -173,8 +200,13 @@ def excluir_beneficiario(id):
         db.session.delete(b)
         db.session.commit()
     return redirect(url_for('beneficiarios'))
+# FIM DA SEÇÃO 8
 
-# --- 9. EXECUÇÃO DO APP ---
+
+# ==========================================
+# SEÇÃO 9: EXECUÇÃO DO APP
+# ==========================================
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+# FIM DA SEÇÃO 9

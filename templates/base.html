@@ -7,10 +7,8 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
     <style>
-        /* 3. VARIÁVEIS DE CORES (IDENTIDADE VISUAL)
-           Centralizamos o Bordeaux e o Dourado para facilitar mudanças futuras. */
+        /* Variáveis de Cores: Centralização da Paleta de Cores da Paróquia */
         :root {
             --cor-santuario: #4f1f19; /* Bordeaux (Vinho) */
             --cor-saojose: #f0b624;   /* Dourado */
@@ -18,14 +16,14 @@
             --cor-texto: #2d2d2d;
         }
 
-        /* 4. ESTILOS GLOBAIS DO CORPO DO SITE */
+        /* Configurações Globais do Body */
         body { 
             background-color: var(--cor-fundo); 
             color: var(--cor-texto);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        /* 5. ESTILIZAÇÃO DA BARRA DE NAVEGAÇÃO CUSTOMIZADA */
+        /* Navbar Customizada: Cores e Bordas */
         .navbar-paroquia {
             background-color: var(--cor-santuario);
             border-bottom: 4px solid var(--cor-saojose);
@@ -33,7 +31,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        /* Ajustes do Logo e Tipografia da Marca */
+        /* Estilização da Logo e Textos da Marca */
         .logo-img {
             height: 50px;
             width: auto;
@@ -56,8 +54,7 @@
             line-height: 1;
         }
 
-        /* 6. BOTÃO HAMBÚRGUER (CUSTOMIZADO)
-           Usa um SVG embutido para garantir que os 3 riscos sejam dourados. */
+        /* Botão Mobile (Hambúrguer) com Ícone Dourado */
         .navbar-toggler {
             border-color: var(--cor-saojose) !important;
             padding: 4px 8px;
@@ -67,7 +64,7 @@
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23f0b624' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
         }
 
-        /* 7. LINKS DO MENU E COMPORTAMENTO AO PASSAR O MOUSE (HOVER) */
+        /* Links de Navegação: Efeitos de Hover e Espaçamento */
         .nav-link {
             color: white !important;
             padding: 12px 15px !important;
@@ -82,13 +79,14 @@
             color: var(--cor-saojose) !important;
         }
 
-        /* Ajustes globais para os Cabeçalhos de Card do projeto */
+        /* Padronização dos Cabeçalhos de Cards */
         .card-header {
             background-color: var(--cor-santuario) !important;
             color: white !important;
         }
     </style>
-</head>
+    </head>
+
 <body>
     <nav class="navbar navbar-paroquia mb-4">
         <div class="container">
@@ -119,11 +117,9 @@
             </div>
         </div>
     </nav>
-
     <div class="container pb-5">
         {% block content %}{% endblock %}
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+    </body>
 </html>
