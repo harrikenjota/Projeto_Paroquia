@@ -5,17 +5,17 @@
     <div class="col-md-4 mb-4">
         <div class="card shadow-sm border-0">
             <div class="card-header text-white" style="background-color: var(--cor-santuario)">
-                <h5 class="mb-0">Cadastro de Pessoas</h5>
+                <h5 class="mb-0 small fw-bold text-uppercase">Cadastro de Pessoas</h5>
             </div>
             <div class="card-body">
                 <form action="/beneficiarios/" method="POST">
                     <div class="mb-3">
-                        <label class="form-label">Nome do Responsável</label>
+                        <label class="form-label small fw-bold text-muted">Nome do Responsável</label>
                         <input type="text" name="nome" class="form-control" placeholder="Ex: Maria Silva" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Categoria</label>
+                        <label class="form-label small fw-bold text-muted">Categoria</label>
                         <select name="categoria" class="form-select" required>
                             <option value="Assistido">Assistido (Necessita de doação)</option>
                             <option value="Doador">Doador (Oferece doação)</option>
@@ -23,15 +23,16 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Telefone</label>
+                        <label class="form-label small fw-bold text-muted">Telefone</label>
                         <input type="text" name="telefone" class="form-control" placeholder="(11) 99999-9999">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Endereço</label>
+                        <label class="form-label small fw-bold text-muted">Endereço</label>
                         <textarea name="endereco" class="form-control" rows="2" placeholder="Rua, Número, Bairro"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-success w-100" style="background-color: var(--cor-santuario); border: none;">
-                        Salvar Cadastro
+
+                    <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm" style="background-color: var(--cor-santuario); border: none;">
+                        <i class="bi bi-person-plus-fill me-1"></i> Salvar Cadastro
                     </button>
                 </form>
             </div>
@@ -41,35 +42,36 @@
     <div class="col-md-8">
         <div class="card shadow-sm border-0">
             <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color: var(--cor-santuario)">
-                <h5 class="mb-0">Pessoas Cadastradas</h5>
-                <a href="/exportar_beneficiarios_csv" class="btn btn-sm btn-light fw-bold text-dark">
-                    <i class="bi bi-file-earmark-person-fill text-primary"></i> Exportar Contatos
+                <h5 class="mb-0 small fw-bold text-uppercase">Pessoas Cadastradas</h5>
+                <a href="/exportar_beneficiarios_csv" class="btn btn-sm btn-light fw-bold text-dark shadow-sm" style="font-size: 0.75rem;">
+                    <i class="bi bi-file-earmark-person-fill text-primary"></i> EXPORTAR CONTATOS
                 </a>
             </div>
+
             <div class="card-body">
                 <div class="table-responsive"> 
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr style="font-size: 0.85rem;">
                                 <th>Nome</th>
                                 <th>Categoria</th>
                                 <th>Telefone</th>
-                                <th>Ações</th>
+                                <th class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for b in beneficiarios %}
                             <tr>
-                                <td><strong>{{ b.nome }}</strong></td>
+                                <td><strong class="text-dark">{{ b.nome }}</strong></td>
                                 <td>
-                                    <span class="badge {{ 'bg-info' if b.categoria == 'Doador' else 'bg-warning text-dark' }}">
-                                        {{ b.categoria }}
+                                    <span class="badge {{ 'bg-info' if b.categoria == 'Doador' else 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
+                                        {{ b.categoria.upper() }}
                                     </span>
                                 </td>
-                                <td>{{ b.telefone }}</td>
-                                <td>
+                                <td class="small text-muted">{{ b.telefone }}</td>
+                                <td class="text-center">
                                     <a href="{{ url_for('excluir_beneficiario', id=b.id) }}" 
-                                       class="btn btn-outline-danger btn-sm"
+                                       class="text-danger"
                                        onclick="return confirm('Tem certeza que deseja excluir este cadastro?')">
                                         <i class="bi bi-trash"></i>
                                     </a>
@@ -77,7 +79,9 @@
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted">Nenhuma pessoa cadastrada ainda.</td>
+                                <td colspan="4" class="text-center text-muted py-4 italic">
+                                    Nenhuma pessoa cadastrada ainda.
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -89,7 +93,9 @@
 </div>
 
 <div class="mt-3">
-    <a href="/" class="btn btn-outline-secondary">← Voltar para o Estoque</a>
+    <a href="/" class="btn btn-link text-decoration-none p-0 text-muted" style="font-size: 0.9rem;">
+        <i class="bi bi-arrow-left"></i> Voltar para o Painel de Estoque
+    </a>
 </div>
 
 {% endblock %}

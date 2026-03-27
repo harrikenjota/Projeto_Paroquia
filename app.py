@@ -7,21 +7,27 @@ import io
 
 app = Flask(__name__)
 
-# --- CONFIGURAÇÕES DO SISTEMA ---
+# --- 1. CONFIGURAÇÕES DO SISTEMA ---
+# Define o banco de dados e a chave de segurança para mensagens de alerta
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///paroquia.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'santuario_sao_jose_secret'
 
 db.init_app(app)
 
+# --- 2. INICIALIZAÇÃO DO BANCO ---
+# Cria as tabelas automaticamente se elas ainda não existirem
 with app.app_context():
     db.create_all()
 
-# --- ROTA 1: PAINEL PRINCIPAL (TELA DE ESTOQUE) ---
+# --- 3. ROTA: PAINEL PRINCIPAL (ESTOQUE) ---
 @app.route('/')
 def index():
+    # Busca todas as movimentações e beneficiários no banco
     todas_movimentacoes = Doacao.query.order_by(Doacao.data.desc()).all()
+    lista_beneficiarios = Beneficiario.query.order_by(Beneficiario.nome).all()
     
+    # Cálculo dinâmico do saldo atual de cada item
     estoque = {}
     for d in todas_movimentacoes:
         item_nome = d.item.upper()
@@ -33,9 +39,11 @@ def index():
         else:
             estoque[item_nome] -= d.quantidade
             
+    # Lista de nomes de itens para sugestão no formulário
     lista_itens_existentes = sorted(estoque.keys())
 
-    total_familias = Beneficiario.query.count()
+    # KPIs: Indicadores para o topo da página
+    total_familias = len(lista_beneficiarios)
     total_itens_estoque = len(estoque) 
     hoje = Doacao.query.filter(db.func.date(Doacao.data) == datetime.now().date()).count()
 
@@ -45,22 +53,17 @@ def index():
                            total_familias=total_familias,
                            total_itens=total_itens_estoque,
                            hoje=hoje,
-                           lista_itens_existentes=lista_itens_existentes)
+                           lista_itens_existentes=lista_itens_existentes,
+                           lista_beneficiarios=lista_beneficiarios) # Enviando a lista para o Select
 
-# --- ROTA 2: DASHBOARD (ESTATÍSTICAS E GRÁFICOS) ---
+# --- 4. ROTA: DASHBOARD (ESTATÍSTICAS) ---
 @app.route('/dashboard')
 def dashboard():
-    """
-    Rota responsável por processar os dados brutos do banco e transformá-los
-    em formatos que o Chart.js (JavaScript) consiga ler para gerar gráficos.
-    """
     todas_movimentacoes = Doacao.query.all()
-    
     estoque_grafico = {}
     entradas_totais = 0
     saidas_totais = 0
     
-    # Processa as movimentações para calcular saldos e totais de fluxo
     for d in todas_movimentacoes:
         item = d.item.upper()
         if item not in estoque_grafico: 
@@ -73,32 +76,27 @@ def dashboard():
             estoque_grafico[item] -= d.quantidade
             saidas_totais += d.quantidade
 
-    # Prepara as listas (Labels e Valores) apenas para itens que ainda existem fisicamente
-    # O filtro 'qtd > 0' evita que o gráfico mostre itens que já acabaram.
     labels = [item for item, qtd in estoque_grafico.items() if qtd > 0]
     valores = [qtd for item, qtd in estoque_grafico.items() if qtd > 0]
     
-    # KPIs (Indicadores Chave de Performance)
     total_familias = Beneficiario.query.count()
-    # Contador de itens com estoque crítico (menor ou igual a 5)
     itens_criticos = sum(1 for qtd in estoque_grafico.values() if 0 < qtd <= 5)
 
     return render_template('dashboard.html', 
-                           labels=labels, 
-                           valores=valores,
-                           entradas=entradas_totais,
-                           saidas=saidas_totais,
-                           total_familias=total_familias,
-                           itens_criticos=itens_criticos)
+                           labels=labels, valores=valores,
+                           entradas=entradas_totais, saidas=saidas_totais,
+                           total_familias=total_familias, itens_criticos=itens_criticos)
 
-# --- ROTA 3: REGISTRO DE MOVIMENTAÇÃO ---
+# --- 5. ROTA: PROCESSAR REGISTRO (VINCULANDO BENEFICIÁRIO) ---
 @app.route('/registrar', methods=['POST'])
 def registrar():
     item_nome = request.form['item'].upper().strip()
     quantidade = int(request.form['quantidade'])
     tipo = request.form['tipo']
+    # Agora o 'responsavel' recebe o nome selecionado no Select do formulário
     responsavel = request.form['responsavel']
 
+    # Validação de estoque para saídas
     if tipo == 'SAIDA':
         movs = Doacao.query.filter_by(item=item_nome).all()
         saldo_atual = sum(m.quantidade if m.tipo == 'ENTRADA' else -m.quantidade for m in movs)
@@ -107,6 +105,7 @@ def registrar():
             flash(f'ERRO: Estoque insuficiente de {item_nome}! Saldo atual: {saldo_atual}.', 'danger')
             return redirect(url_for('index'))
 
+    # Salva a nova doação/movimentação no banco
     nova_movimentacao = Doacao(
         item=item_nome,
         quantidade=quantidade,
@@ -118,7 +117,7 @@ def registrar():
     db.session.commit()
     return redirect(url_for('index'))
 
-# --- ROTAS DE EXPORTAÇÃO (CSV) ---
+# --- 6. ROTAS DE EXPORTAÇÃO (CSV) ---
 @app.route('/exportar_csv')
 def exportar_csv():
     movimentacoes = Doacao.query.order_by(Doacao.data.desc()).all()
@@ -141,7 +140,7 @@ def exportar_beneficiarios_csv():
     output.seek(0)
     return Response(output.getvalue(), mimetype="text/csv", headers={"Content-disposition": "attachment; filename=contatos_santuario.csv"})
 
-# --- GESTÃO DE BENEFICIÁRIOS ---
+# --- 7. ROTA: GESTÃO DE BENEFICIÁRIOS (CADASTRO) ---
 @app.route('/beneficiarios/', methods=['GET', 'POST'])
 def beneficiarios():
     if request.method == 'POST':
@@ -158,7 +157,7 @@ def beneficiarios():
     lista_familias = Beneficiario.query.all()
     return render_template('beneficiarios.html', beneficiarios=lista_familias)
 
-# --- ROTAS DE EXCLUSÃO ---
+# --- 8. ROTAS DE EXCLUSÃO ---
 @app.route('/excluir_movimentacao/<int:id>')
 def excluir_movimentacao(id):
     mov = Doacao.query.get(id)
@@ -175,6 +174,7 @@ def excluir_beneficiario(id):
         db.session.commit()
     return redirect(url_for('beneficiarios'))
 
+# --- 9. EXECUÇÃO DO APP ---
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)

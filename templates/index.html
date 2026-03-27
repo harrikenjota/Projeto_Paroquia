@@ -19,7 +19,7 @@
 
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-light fw-bold small text-muted text-uppercase">
-            <i class="bi bi-table me-1"></i> Saldo Atualizado
+            <i class="bi bi-table me-1"></i> Saldo em Tempo Real
         </div>
         <div class="card-body py-3">
             <div class="d-flex flex-wrap gap-2">
@@ -42,7 +42,7 @@
                     <form action="/registrar" method="POST">
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Item</label>
-                            <input class="form-control" list="itensList" name="item" id="itemInput" placeholder="Digite ou selecione o item..." required>
+                            <input class="form-control" list="itensList" name="item" id="itemInput" placeholder="Ex: Arroz, Feijão..." required>
                             <datalist id="itensList">
                                 {% for nome in lista_itens_existentes %}
                                 <option value="{{ nome }}">
@@ -65,8 +65,23 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Responsável</label>
-                            <input type="text" name="responsavel" class="form-control" required placeholder="Quem está registrando?">
+                            <label class="form-label small fw-bold">Beneficiário / Responsável</label>
+                            <select name="responsavel" class="form-select" required>
+                                <option value="" selected disabled>Quem está recebendo/doando?</option>
+                                
+                                <optgroup label="Beneficiários Cadastrados">
+                                    {% for b in lista_beneficiarios %}
+                                        <option value="{{ b.nome }}">{{ b.nome }} ({{ b.categoria }})</option>
+                                    {% endfor %}
+                                </optgroup>
+                                
+                                <optgroup label="Outros">
+                                    <option value="Santuário - Uso Interno">Santuário - Uso Interno</option>
+                                    <option value="Doador Anônimo">Doador Anônimo</option>
+                                    <option value="Voluntário de Plantão">Voluntário de Plantão</option>
+                                </optgroup>
+                            </select>
+                            <div class="form-text" style="font-size: 0.7rem;">Não achou o nome? Cadastre em "Contatos".</div>
                         </div>
                         
                         <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm" style="background-color: #28a745; border: none;">
@@ -92,8 +107,7 @@
                                 <th>Data</th>
                                 <th>Item</th>
                                 <th>Qtd</th>
-                                <th>Tipo</th>
-                                <th class="text-center">Ação</th>
+                                <th>Quem?</th> <th class="text-center">Ação</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -101,14 +115,14 @@
                             <tr>
                                 <td class="small">{{ m.data.strftime('%d/%m') }}</td>
                                 <td class="small fw-bold">{{ m.item }}</td>
-                                <td class="small">{{ m.quantidade }}</td>
-                                <td>
-                                    <span class="badge {% if m.tipo == 'ENTRADA' %}bg-info{% else %}bg-secondary{% endif %}" style="font-size: 0.65rem;">
-                                        {{ m.tipo[0] }}
+                                <td class="small">
+                                    <span class="{% if m.tipo == 'ENTRADA' %}text-info{% else %}text-danger{% endif %} fw-bold">
+                                        {{ m.quantidade }}
                                     </span>
                                 </td>
+                                <td class="small text-muted">{{ m.responsavel }}</td>
                                 <td class="text-center">
-                                    <a href="{{ url_for('excluir_movimentacao', id=m.id) }}" class="text-danger" onclick="return confirm('Excluir este registro do histórico?')">
+                                    <a href="{{ url_for('excluir_movimentacao', id=m.id) }}" class="text-danger" onclick="return confirm('Excluir este registro?')">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </td>

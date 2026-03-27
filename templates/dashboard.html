@@ -7,19 +7,19 @@
     <div class="row mb-4">
         <div class="col-md-4 mb-3">
             <div class="card bg-light border-0 shadow-sm text-center p-3">
-                <h6 class="text-muted text-uppercase small">Famílias Atendidas</h6>
+                <h6 class="text-muted text-uppercase small fw-bold">Famílias Atendidas</h6>
                 <h2 class="fw-bold">{{ total_familias }}</h2>
             </div>
         </div>
         <div class="col-md-4 mb-3">
             <div class="card border-0 shadow-sm text-center p-3 text-white" style="background-color: var(--cor-santuario)">
-                <h6 class="text-uppercase small">Itens em Alerta (<=5)</h6>
+                <h6 class="text-uppercase small fw-bold">Itens em Alerta (<=5)</h6>
                 <h2 class="fw-bold">{{ itens_criticos }}</h2>
             </div>
         </div>
         <div class="col-md-4 mb-3">
             <div class="card bg-success border-0 shadow-sm text-center p-3 text-white">
-                <h6 class="text-uppercase small">Total Entradas</h6>
+                <h6 class="text-uppercase small fw-bold">Total Entradas</h6>
                 <h2 class="fw-bold">{{ entradas }}</h2>
             </div>
         </div>
@@ -28,14 +28,14 @@
     <div class="row">
         <div class="col-md-6 mb-4">
             <div class="card border-0 shadow-sm p-3">
-                <h5 class="fw-bold mb-3 small">Distribuição do Estoque (Itens Ativos)</h5>
+                <h5 class="fw-bold mb-3 small text-muted text-uppercase">Distribuição do Estoque (Itens Ativos)</h5>
                 <canvas id="graficoEstoque"></canvas>
             </div>
         </div>
 
         <div class="col-md-6 mb-4">
             <div class="card border-0 shadow-sm p-3">
-                <h5 class="fw-bold mb-3 small">Volume de Operações (Total Histórico)</h5>
+                <h5 class="fw-bold mb-3 small text-muted text-uppercase">Volume de Operações (Total Histórico)</h5>
                 <canvas id="graficoBarras"></canvas>
             </div>
         </div>
@@ -43,17 +43,14 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    /**
-     * AJUSTE DEVIDO O VS CODE:
-     * Para evitar mensagem de erro na guia "Problemas", transformado os dados do Jinja
-     * em strings temporárias que o JavaScript resolve no carregamento.
-     */
 
-    // --- Gráfico de Rosca (Estoque) ---
+<script>
+    /* Recebe as variáveis do Flask (Jinja2) e as transformam
+       em constantes JavaScript para o Chart.js renderizar na tela.
+    */
+
+    // --- GRÁFICO DE ROSCA (ITENS EM ESTOQUE) ---
     const ctxPizza = document.getElementById('graficoEstoque');
-    
-    // Convertemos a string do Jinja em objeto JS real
     const labelsEstoque = JSON.parse('{{ labels|tojson|safe }}');
     const valoresEstoque = JSON.parse('{{ valores|tojson|safe }}');
 
@@ -75,10 +72,10 @@
         }
     });
 
-    // --- Gráfico de Barras (Fluxo) ---
+    // --- GRÁFICO DE BARRAS (ENTRADAS VS SAÍDAS) ---
     const ctxBarras = document.getElementById('graficoBarras');
     
-    // Forçamos o reconhecimento como número para silenciar o editor
+    // Converte valores do servidor para Números no JavaScript
     const numEntradas = Number('{{ entradas }}');
     const numSaidas = Number('{{ saidas }}');
 
