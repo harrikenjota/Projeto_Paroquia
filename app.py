@@ -10,23 +10,18 @@ app = Flask(__name__)
 # --- CONFIGURAÇÕES DO SISTEMA ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///paroquia.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# Secret Key: Necessária para que o sistema possa exibir mensagens de alerta (Flash Messages)
 app.secret_key = 'santuario_sao_jose_secret'
 
 db.init_app(app)
 
-# Cria as tabelas no banco de dados caso elas não existam ao iniciar o app
 with app.app_context():
     db.create_all()
 
 # --- ROTA 1: PAINEL PRINCIPAL (TELA DE ESTOQUE) ---
 @app.route('/')
 def index():
-    # Busca todas as movimentações do banco, da mais recente para a mais antiga
     todas_movimentacoes = Doacao.query.order_by(Doacao.data.desc()).all()
     
-    # LÓGICA DE CÁLCULO DE SALDO:
-    # Percorre todas as doações. Se for 'ENTRADA', somamos. Se for 'SAIDA', subtraímos.
     estoque = {}
     for d in todas_movimentacoes:
         item_nome = d.item.upper()
@@ -38,11 +33,8 @@ def index():
         else:
             estoque[item_nome] -= d.quantidade
             
-    # --- LOGICA DO SELECT (DATALIST) ---
-    # Pegamos apenas os nomes dos itens que já existem no estoque para sugerir no formulário
     lista_itens_existentes = sorted(estoque.keys())
 
-    # Estatísticas para o Dashboard
     total_familias = Beneficiario.query.count()
     total_itens_estoque = len(estoque) 
     hoje = Doacao.query.filter(db.func.date(Doacao.data) == datetime.now().date()).count()
@@ -53,9 +45,53 @@ def index():
                            total_familias=total_familias,
                            total_itens=total_itens_estoque,
                            hoje=hoje,
-                           lista_itens_existentes=lista_itens_existentes) # Enviado para o HTML
+                           lista_itens_existentes=lista_itens_existentes)
 
-# --- ROTA 2: REGISTRO DE MOVIMENTAÇÃO (COM TRAVA DE SEGURANÇA) ---
+# --- ROTA 2: DASHBOARD (ESTATÍSTICAS E GRÁFICOS) ---
+@app.route('/dashboard')
+def dashboard():
+    """
+    Rota responsável por processar os dados brutos do banco e transformá-los
+    em formatos que o Chart.js (JavaScript) consiga ler para gerar gráficos.
+    """
+    todas_movimentacoes = Doacao.query.all()
+    
+    estoque_grafico = {}
+    entradas_totais = 0
+    saidas_totais = 0
+    
+    # Processa as movimentações para calcular saldos e totais de fluxo
+    for d in todas_movimentacoes:
+        item = d.item.upper()
+        if item not in estoque_grafico: 
+            estoque_grafico[item] = 0
+        
+        if d.tipo == 'ENTRADA':
+            estoque_grafico[item] += d.quantidade
+            entradas_totais += d.quantidade
+        else:
+            estoque_grafico[item] -= d.quantidade
+            saidas_totais += d.quantidade
+
+    # Prepara as listas (Labels e Valores) apenas para itens que ainda existem fisicamente
+    # O filtro 'qtd > 0' evita que o gráfico mostre itens que já acabaram.
+    labels = [item for item, qtd in estoque_grafico.items() if qtd > 0]
+    valores = [qtd for item, qtd in estoque_grafico.items() if qtd > 0]
+    
+    # KPIs (Indicadores Chave de Performance)
+    total_familias = Beneficiario.query.count()
+    # Contador de itens com estoque crítico (menor ou igual a 5)
+    itens_criticos = sum(1 for qtd in estoque_grafico.values() if 0 < qtd <= 5)
+
+    return render_template('dashboard.html', 
+                           labels=labels, 
+                           valores=valores,
+                           entradas=entradas_totais,
+                           saidas=saidas_totais,
+                           total_familias=total_familias,
+                           itens_criticos=itens_criticos)
+
+# --- ROTA 3: REGISTRO DE MOVIMENTAÇÃO ---
 @app.route('/registrar', methods=['POST'])
 def registrar():
     item_nome = request.form['item'].upper().strip()
@@ -63,18 +99,14 @@ def registrar():
     tipo = request.form['tipo']
     responsavel = request.form['responsavel']
 
-    # VERIFICAÇÃO NO CASO DE ESTOQUE NEGATIVO:
     if tipo == 'SAIDA':
-        # Calcula o saldo atual do item antes de permitir a saída
         movs = Doacao.query.filter_by(item=item_nome).all()
         saldo_atual = sum(m.quantidade if m.tipo == 'ENTRADA' else -m.quantidade for m in movs)
 
         if quantidade > saldo_atual:
-            # Envia mensagem de erro que aparecerá no index.html
-            flash(f'ERRO: Estoque insuficiente de {item_nome}! Você tentou retirar {quantidade}, mas só temos {saldo_atual}.', 'danger')
+            flash(f'ERRO: Estoque insuficiente de {item_nome}! Saldo atual: {saldo_atual}.', 'danger')
             return redirect(url_for('index'))
 
-    # Se passar na validação ou for ENTRADA, salva no banco
     nova_movimentacao = Doacao(
         item=item_nome,
         quantidade=quantidade,
@@ -86,7 +118,7 @@ def registrar():
     db.session.commit()
     return redirect(url_for('index'))
 
-# --- ROTA 3: EXPORTAR DADOS (CSV/EXCEL) ---
+# --- ROTAS DE EXPORTAÇÃO (CSV) ---
 @app.route('/exportar_csv')
 def exportar_csv():
     movimentacoes = Doacao.query.order_by(Doacao.data.desc()).all()
@@ -109,7 +141,7 @@ def exportar_beneficiarios_csv():
     output.seek(0)
     return Response(output.getvalue(), mimetype="text/csv", headers={"Content-disposition": "attachment; filename=contatos_santuario.csv"})
 
-# --- ROTA 4: GESTÃO DE BENEFICIÁRIOS ---
+# --- GESTÃO DE BENEFICIÁRIOS ---
 @app.route('/beneficiarios/', methods=['GET', 'POST'])
 def beneficiarios():
     if request.method == 'POST':
