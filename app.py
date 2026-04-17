@@ -12,6 +12,7 @@ app = Flask(__name__)
 # ==========================================
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///paroquia.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# A secret_key é necessária para o funcionamento das Mensagens Flash
 app.secret_key = 'santuario_sao_jose_secret'
 
 db.init_app(app)
@@ -88,7 +89,6 @@ def dashboard():
     labels = [item for item, qtd in estoque_grafico.items() if qtd > 0]
     valores = [qtd for item, qtd in estoque_grafico.items() if qtd > 0]
     
-    # --- NOVA LÓGICA DE CONTAGEM SEPARADA ---
     total_assistidos = Beneficiario.query.filter_by(categoria='Assistido').count()
     total_doadores = Beneficiario.query.filter_by(categoria='Doador').count()
     
@@ -113,14 +113,16 @@ def registrar():
     tipo = request.form['tipo']
     responsavel = request.form['responsavel']
 
+    # Validação de Estoque antes de registrar Saída
     if tipo == 'SAIDA':
         movs = Doacao.query.filter_by(item=item_nome).all()
         saldo_atual = sum(m.quantidade if m.tipo == 'ENTRADA' else -m.quantidade for m in movs)
 
         if quantidade > saldo_atual:
-            flash(f'ERRO: Estoque insuficiente de {item_nome}! Saldo atual: {saldo_atual}.', 'danger')
+            flash(f'ERRO: Estoque insuficiente de {item_nome}! Saldo disponível: {saldo_atual}.', 'danger')
             return redirect(url_for('index'))
 
+    # Criando e salvando a movimentação
     nova_movimentacao = Doacao(
         item=item_nome,
         quantidade=quantidade,
@@ -130,6 +132,9 @@ def registrar():
     )
     db.session.add(nova_movimentacao)
     db.session.commit()
+    
+    # Feedback visual de sucesso
+    flash(f'Registro de {tipo} para {item_nome} realizado com sucesso!', 'success')
     return redirect(url_for('index'))
 # FIM DA SEÇÃO 5
 
@@ -146,6 +151,7 @@ def exportar_csv():
     for m in movimentacoes:
         writer.writerow([m.data.strftime('%d/%m/%Y %H:%M'), m.item, m.quantidade, m.tipo, m.responsavel])
     output.seek(0)
+    flash('Relatório de estoque exportado com sucesso!', 'info')
     return Response(output.getvalue(), mimetype="text/csv", headers={"Content-disposition": "attachment; filename=relatorio_santuario.csv"})
 
 @app.route('/exportar_beneficiarios_csv')
@@ -157,6 +163,7 @@ def exportar_beneficiarios_csv():
     for p in pessoas:
         writer.writerow([p.nome, p.categoria, p.telefone, p.endereco])
     output.seek(0)
+    flash('Lista de contatos exportada com sucesso!', 'info')
     return Response(output.getvalue(), mimetype="text/csv", headers={"Content-disposition": "attachment; filename=contatos_santuario.csv"})
 # FIM DA SEÇÃO 6
 
@@ -175,6 +182,8 @@ def beneficiarios():
         )
         db.session.add(novo_b)
         db.session.commit()
+        # Feedback visual de sucesso
+        flash(f'Cadastro de {novo_b.nome} realizado com sucesso!', 'success')
         return redirect(url_for('beneficiarios'))
     
     lista_familias = Beneficiario.query.all()
@@ -189,16 +198,20 @@ def beneficiarios():
 def excluir_movimentacao(id):
     mov = Doacao.query.get(id)
     if mov:
+        item_removido = mov.item
         db.session.delete(mov)
         db.session.commit()
+        flash(f'Registro de {item_removido} removido do histórico.', 'info')
     return redirect(url_for('index'))
 
 @app.route('/excluir_beneficiario/<int:id>')
 def excluir_beneficiario(id):
     b = Beneficiario.query.get(id)
     if b:
+        nome_removido = b.nome
         db.session.delete(b)
         db.session.commit()
+        flash(f'O cadastro de {nome_removido} foi excluído.', 'info')
     return redirect(url_for('beneficiarios'))
 # FIM DA SEÇÃO 8
 

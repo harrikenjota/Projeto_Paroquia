@@ -1,98 +1,101 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-header text-white" style="background-color: var(--cor-santuario)">
-                <h5 class="mb-0 small fw-bold text-uppercase">Cadastro de Pessoas</h5>
-            </div>
-            <div class="card-body">
-                <form action="/beneficiarios/" method="POST">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Nome do Responsável</label>
-                        <input type="text" name="nome" class="form-control" placeholder="Ex: Maria Silva" required>
-                    </div>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="color: var(--cor-santuario)">Gestão de Beneficiários</h2>
+    </div>
 
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Categoria</label>
-                        <select name="categoria" class="form-select" required>
-                            <option value="Assistido">Assistido (Necessita de doação)</option>
-                            <option value="Doador">Doador (Oferece doação)</option>
-                        </select>
-                    </div>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header text-white" style="background-color: var(--cor-santuario)">
+                    <h5 class="mb-0 small fw-bold text-uppercase">Cadastro de Pessoas</h5>
+                </div>
+                <div class="card-body">
+                    <form action="/beneficiarios/" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Nome do Responsável</label>
+                            <input type="text" name="nome" class="form-control" placeholder="Ex: Maria Silva" required>
+                        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Telefone</label>
-                        <input type="text" name="telefone" class="form-control" placeholder="(11) 99999-9999">
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Categoria</label>
+                            <select name="categoria" class="form-select" required>
+                                <option value="Assistido">Assistido (Necessita de doação)</option>
+                                <option value="Doador">Doador (Oferece doação)</option>
+                            </select>
+                        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Endereço</label>
-                        <textarea name="endereco" class="form-control" rows="2" placeholder="Rua, Número, Bairro"></textarea>
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Telefone</label>
+                            <input type="text" name="telefone" class="form-control" placeholder="(11) 99999-9999">
+                        </div>
 
-                    <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm" style="background-color: var(--cor-santuario); border: none;">
-                        <i class="bi bi-person-plus-fill me-1"></i> Salvar Cadastro
-                    </button>
-                </form>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Endereço</label>
+                            <textarea name="endereco" class="form-control" rows="2" placeholder="Rua, Número, Bairro"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm" style="background-color: var(--cor-santuario); border: none;">
+                            <i class="bi bi-person-plus-fill me-1"></i> Salvar Cadastro
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color: var(--cor-santuario)">
-                <h5 class="mb-0 small fw-bold text-uppercase">Pessoas Cadastradas</h5>
-                <a href="/exportar_beneficiarios_csv" class="btn btn-sm btn-light fw-bold text-dark shadow-sm" style="font-size: 0.75rem;">
-                    <i class="bi bi-file-earmark-person-fill text-primary"></i> EXPORTAR CONTATOS
-                </a>
-            </div>
 
-            <div class="card-body">
-                <div class="table-responsive"> 
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr style="font-size: 0.85rem;">
-                                <th>Nome</th>
-                                <th>Categoria</th>
-                                <th>Telefone</th>
-                                <th class="text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for b in beneficiarios %}
-                            <tr>
-                                <td><strong class="text-dark">{{ b.nome }}</strong></td>
-                                <td>
-                                    <span class="badge {{ 'bg-info' if b.categoria == 'Doador' else 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
-                                        {{ b.categoria.upper() }}
-                                    </span>
-                                </td>
-                                <td class="small text-muted">{{ b.telefone }}</td>
-                                <td class="text-center">
-                                    <a href="{{ url_for('excluir_beneficiario', id=b.id) }}" 
-                                       class="text-danger"
-                                       onclick="return confirm('Tem certeza que deseja excluir este cadastro?')">
-                                         <i class="bi bi-trash"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-4 italic">
-                                    Nenhuma pessoa cadastrada ainda.
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color: var(--cor-santuario)">
+                    <h5 class="mb-0 small fw-bold text-uppercase">Pessoas Cadastradas</h5>
+                    <a href="/exportar_beneficiarios_csv" class="btn btn-sm btn-light fw-bold text-dark shadow-sm" style="font-size: 0.75rem;">
+                        <i class="bi bi-file-earmark-person-fill text-primary"></i> EXPORTAR CONTATOS
+                    </a>
+                </div>
+
+                <div class="card-body">
+                    <div class="table-responsive"> 
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr style="font-size: 0.85rem;">
+                                    <th>Nome</th>
+                                    <th>Categoria</th>
+                                    <th>Telefone</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in beneficiarios %}
+                                <tr>
+                                    <td><strong class="text-dark">{{ b.nome }}</strong></td>
+                                    <td>
+                                        <span class="badge {{ 'bg-info' if b.categoria == 'Doador' else 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
+                                            {{ b.categoria.upper() }}
+                                        </span>
+                                    </td>
+                                    <td class="small text-muted">{{ b.telefone }}</td>
+                                    <td class="text-center">
+                                        <a href="{{ url_for('excluir_beneficiario', id=b.id) }}" 
+                                           class="text-danger"
+                                           onclick="return confirm('Tem certeza que deseja excluir este cadastro?')">
+                                             <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div> <div class="mt-4 mb-5">
-    <a href="/" class="btn btn-link text-decoration-none p-0" style="color: var(--cor-saojose); font-weight: bold; font-size: 0.9rem;">
-        <i class="bi bi-arrow-left"></i> Voltar para o Painel de Estoque
-    </a>
+
+    <div class="mt-4 mb-5">
+        <a href="/" class="btn btn-link text-decoration-none p-0" style="color: var(--cor-saojose); font-weight: bold; font-size: 0.9rem;">
+            <i class="bi bi-arrow-left"></i> Voltar para o Gestão de Estoque
+        </a>
+    </div>
 </div>
 {% endblock %}

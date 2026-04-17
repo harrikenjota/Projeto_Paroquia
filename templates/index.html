@@ -2,22 +2,9 @@
 
 {% block content %}
 <div class="container">
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-    <br> <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold" style="color: var(--cor-santuario)">Estoque Santuário</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="color: var(--cor-santuario)">Gestão de Estoque</h2>
     </div>
-    <br>
-
 
     <div class="card shadow-sm border-0 mb-5">
         <div class="card-header bg-light fw-bold small text-muted text-uppercase">
@@ -30,11 +17,12 @@
                     {{ item }}: <span class="fw-bold">{{ quantidade }}</span>
                 </div>
                 {% else %}
-                <span class="text-muted small">Nenhum item em estoque.</span>
+                <span class="text-muted small">Nenhum item cadastrado no sistema.</span>
                 {% endfor %}
             </div>
         </div>
     </div>
+
     <div class="row">
         <div class="col-md-5 mb-4">
             <div class="card shadow-sm border-0">
@@ -94,13 +82,14 @@
                             </select>
                         </div>
                         
-                        <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm" style="background-color: #28a745; border: none;">
+                        <button type="submit" class="btn w-100 fw-bold shadow-sm text-white" style="background-color: var(--cor-santuario); border: none;">
                             Confirmar Movimentação
                         </button>
                     </form>
                 </div>
             </div>
         </div>
+
         <div class="col-md-7 mb-4">
             <div class="card shadow-sm border-0">
                 <div class="card-header fw-bold text-white d-flex justify-content-between align-items-center" style="background-color: var(--cor-santuario)">
@@ -109,9 +98,8 @@
                         <i class="bi bi-download"></i> EXPORTAR EXCEL
                     </a>
                 </div>
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead class="table-light sticky-top">
+                <div class="card-body p-0"> <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
                             <tr>
                                 <th>Data</th>
                                 <th>Item</th>
@@ -143,11 +131,11 @@
                 </div>
             </div>
         </div>
-        </div>
+    </div>
 </div>
 
-
 <style>
+    /* Efeito visual para estoque baixo */
     .pulse { 
         animation: pulse-red 2s infinite; 
         box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
@@ -158,8 +146,7 @@
         100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
     }
     
-    .table-responsive { -webkit-overflow-scrolling: touch; }
-    
+    /* Melhoria visual para os grupos de beneficiários */
     optgroup {
         font-weight: bold;
         color: #666;
